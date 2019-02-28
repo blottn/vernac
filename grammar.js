@@ -1,9 +1,13 @@
+// TODO change to use singular constructor
 function Sequence(a,b) {
     this.first = a;
     this.second = b;
 
     this.match = function(input, callback) {
-        callback(a.match(input, b.match));
+        let res = a.match(input);
+        if (res.matched) {
+            return b.match(input.substring(res.index));
+        }
     }
 }
 
@@ -22,6 +26,21 @@ function OrderedChoice(a,b) {
     }
 }
 
+function Optional(a) {
+    this.match = function(input,callback) {
+        let res = a.match(input);
+        if (res.matched) {
+            return res;
+        }
+        else {
+            return {
+                matched: true,
+                txt : input
+            };
+        }
+    }
+}
+
 // primitives
 function Empty() {
     this.match = function(input, callback) {
@@ -33,7 +52,10 @@ function Terminal(string) {
     this.terminal = new RegExp('^' + string);
     this.match = function(input, callback) {
         if (input.match(this.terminal)) {
-            return input.substring(string.length);
+            return {
+                matched : true,
+                txt : input.substring(string.length)
+            };
         }
         else {
             // error until matched

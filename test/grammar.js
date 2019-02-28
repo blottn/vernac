@@ -16,10 +16,17 @@ with (grammar) {
     describe('Terminal', function() {
         describe('#match()', function() {
             it('should match when empty', function() {
-                assert.equal(new Terminal('').match('asdf'),'asdf');
+                let input = 'asdf';
+                let res = new Terminal('').match(input);
+                assert.equal(res.matched, true);
+                assert.equal(res.txt, input);
             });
             it('should match strings', function() {
-                assert.equal(new Terminal('ab').match('abcdef'),'cdef');
+                let input = 'abcdef';
+                let term = 'ab';
+                let res = new Terminal('ab').match('abcdef');
+                assert.equal(res.matched, true);
+                assert.equal(res.txt,input.substring(term.length));
             });
         });
     });
@@ -28,20 +35,21 @@ with (grammar) {
             it('should match first', function() {
                 let input = 'ab';
                 let peg = new OrderedChoice(new Terminal('a'),new Terminal('b'));
-                assert.equal(peg.match(input),'b');
+                let res = peg.match(input);
+                assert.equal(res.matched, true);
+                assert.equal(res.txt, 'b');
             });
             it('should match second if first fails', function() {
                 let input = 'ab';
                 let peg = new OrderedChoice(new Terminal('b'),new Terminal('a'));
-                assert.equal(peg.match(input),'b');
+                let res = peg.match(input);
+                assert.equal(res.matched, true);
+                assert.equal(res.txt,'b');
             });
             it('should fail', function() {
                 let input = 'ab';
                 let peg = new OrderedChoice(new Terminal('c'),new Terminal('d'));
-                assert.equal(peg.match(input),'');
-            });
-            it('should return first matching', function() {
-
+                assert.equal(peg.match(input),''); // TODO consider changing this error val
             });
         });
     });
