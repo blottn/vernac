@@ -7,6 +7,21 @@ function Sequence(a,b) {
     }
 }
 
+function OrderedChoice(a,b) {
+    this.first = a;
+    this.second = b;
+    this.match = function(input, callback) {
+        let res;
+        if (res = this.first.match(input))
+            return res;
+        else if (res = this.second.match(input))
+            return res;
+        else {
+            return '';
+        }
+    }
+}
+
 // primitives
 function Empty() {
     this.match = function(input, callback) {
@@ -15,9 +30,9 @@ function Empty() {
 }
 
 function Terminal(string) {
-    this.terminal = string;
+    this.terminal = new RegExp('^' + string);
     this.match = function(input, callback) {
-        if (input.match(new RegExp('^' + this.terminal))) {
+        if (input.match(this.terminal)) {
             return input.substring(string.length);
         }
         else {
@@ -31,5 +46,6 @@ function Terminal(string) {
 module.exports = {
     Terminal : Terminal,
     Empty : Empty,
-    Sequence : Sequence
+    Sequence : Sequence,
+    OrderedChoice : OrderedChoice
 };
