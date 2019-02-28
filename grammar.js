@@ -7,7 +7,6 @@ function Sequence(a,b) {
     }
 }
 
-
 // primitives
 function Empty() {
     this.match = function(input, callback) {
@@ -18,7 +17,7 @@ function Empty() {
 function Terminal(string) {
     this.terminal = string;
     this.match = function(input, callback) {
-        if (input.startsWith(this.terminal)) {
+        if (input.match(new RegExp('^' + this.terminal))) {
             return input.substring(string.length);
         }
         else {
@@ -29,3 +28,8 @@ function Terminal(string) {
     }
 }
 
+module.exports = {
+    Terminal : Terminal,
+    Empty : Empty,
+    Sequence : Sequence
+};
