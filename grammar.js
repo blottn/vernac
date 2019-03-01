@@ -10,8 +10,18 @@ class Grammar {
         this.nullable = false;
     }
 
-    match(input) {
+    match(input, strict = false) {
         return new Result(true, input);
+    }
+
+    parse(input, strict = false) {
+        let res = this.match(input, strict);
+        if (res.matched)
+            this.onMatch(input, res);
+        return res;
+    }
+    onMatch(input, result) {
+        (this.listener ? this.listener(input, result) : undefined);
     }
 
     or(alternative) {
@@ -37,6 +47,10 @@ class Grammar {
     times(n) {
         return new NTimes(this, n);
     }
+
+    listen(listener) {
+        this.listener = listener;
+    }
 }
 
 // Primitives
@@ -48,10 +62,11 @@ class Terminal extends Grammar {
         this.nullable = word === '';
     }
     
-    match(input) {
+    match(input, strict) {
         let res = this.re.exec(input);
         if (res) {
-            return new Result(true, input.substring(res.index + this.word.length));
+            let matched = res.index == 0 || !strict;
+            return new Result(matched, input.substring(res.index + this.word.length));
         }
         else {
             return new Result(false, input);
@@ -74,13 +89,13 @@ class Optional extends Grammar {
         this.nullable = true;
     }
 
-    match(input) {
-        let res = this.subGrammar.match(input);
+    match(input, strict) {
+        let res = this.subGrammar.parse(input, strict);
         if (res.matched) {
             return res;
         }
         else {
-            return new Result(true,input);
+            return new Result(true, input);
         }
     }
 }
@@ -99,7 +114,7 @@ class NTimes extends Grammar {
     match(input) {
         let matches = 0;
         let res;
-        for(res = {matched : true, remaining : input} ; res.matched ; res = this.grammar.match(res.remaining)) {
+        for(res = {matched : true, remaining : input} ; res.matched ; res = this.grammar.parse(res.remaining, true)) {
             matches++;
         }
         if (matches >= this.count) {
@@ -118,13 +133,13 @@ class OrderedChoice extends Grammar {
         this.nullable = a.nullable || b.nullable;
     }
 
-    match(input) {
-        let res = this.first.match(input);
+    match(input, strict) {
+        let res = this.first.parse(input, strict);
         if (res.matched) {
             return res;
         }
         else {
-            return this.second.match(input);
+            return this.second.parse(input, strict);
         }
     }
 }
@@ -137,10 +152,10 @@ class Sequence extends Grammar {
         this.nullable = a.nullable && b.nullable;
     }
 
-    match(input) {
-        let res = this.first.match(input);
+    match(input, strict) {
+        let res = this.first.parse(input, strict);
         if (res.matched) {
-            let second_res = this.second.match(res.remaining);
+            let second_res = this.second.parse(res.remaining, strict);
             if (second_res.matched) {
                 return second_res;
             }
@@ -163,10 +178,10 @@ class Lookahead extends Grammar{
         this.nullable = current.nullable;
     }
 
-    match(input) {
-        let res = this.current.match(input);
+    match(input, strict) {
+        let res = this.current.parse(input, strict);
         if (res.matched) {
-            let forward_res = this.forward.match(res.remaining);
+            let forward_res = this.forward.parse(res.remaining, strict);
             if (forward_res.matched) {
                 return new Result(true, res.remaining);
             }
@@ -183,10 +198,10 @@ class Not extends Grammar {
         this.nullable = current.nullable;
     }
     
-    match(input) {
-        let res = this.current.match(input);
+    match(input, strict) {
+        let res = this.current.parse(input, strict);
         if (res.matched) {
-            let forward_res = this.forward.match(res.remaining);
+            let forward_res = this.forward.parse(res.remaining, strict);
             if (!forward_res.matched) {
                 return new Result(true, res.remaining);
             }
