@@ -201,4 +201,45 @@ with (grammar) {
             });
         });
     });
+    describe('NTimes', function() {
+        describe('#parse()', function() {
+            it('should match anything 0 times', function() {
+                let a = new Terminal('a');
+                let zero_a = a.times(0);
+                assert.equal(zero_a.match('asdf').matched, true);
+                assert.equal(zero_a.match('asdf').remaining, 'sdf');
+                
+                assert.equal(zero_a.match('').matched, true);
+                assert.equal(zero_a.match('').remaining, '');
+            });
+            it('should match with 1 times', function() {
+                let a = new Terminal('a');
+                let one_a = a.times(1);
+                assert.equal(one_a.match('asdf').matched, true);
+                assert.equal(one_a.match('asdf').remaining, 'sdf');
+            });
+            it('should match multiple times', function() {
+                let a = new Terminal('a');
+                let one_a = a.times(1);
+                let zero_a = a.times(0);
+
+                assert.equal(one_a.match('aaaas').matched, true);
+                assert.equal(one_a.match('aaaas').remaining, 's');
+
+                assert.equal(zero_a.match('aaaas').matched, true);
+                assert.equal(zero_a.match('aaaas').remaining, 's');
+            });
+            it('should fail if not first', function() {
+                let a = new Terminal('a');
+                let one_a = a.times(1);
+                let zero_a = a.times(0);
+
+                assert.equal(one_a.match('baaaas').matched, false);
+                assert.equal(one_a.match('baaaas').remaining, 'baaaas');
+
+                assert.equal(zero_a.match('baaaas').matched, true);
+                assert.equal(zero_a.match('baaaas').remaining, 'baaaas');
+            });
+        });
+    });
 }

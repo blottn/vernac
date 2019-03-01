@@ -105,17 +105,18 @@ class NTimes extends Grammar {
         super();
         this.grammar = grammar;
         if (this.grammar.nullable) {
-            throw new Error('invalid grammar');
+            throw new TypeError('Invalid grammar');
         }
-        this.count = n;
+        this.count = count;
         this.nullable = count > 0;
     }
 
     match(input) {
         let matches = 0;
         let res;
-        for(res = {matched : true, remaining : input} ; res.matched ; res = this.grammar.parse(res.remaining, true)) {
+        for (res = this.grammar.parse(input, true) ; res.matched; res = this.grammar.parse(res.remaining, true)) {
             matches++;
+            res = this.grammar.parse(res.remaining, true);
         }
         if (matches >= this.count) {
             return new Result(true, res.remaining);
