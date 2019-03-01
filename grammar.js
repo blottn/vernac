@@ -89,6 +89,9 @@ class NTimes extends Grammar {
     constructor(grammar, count) {
         super();
         this.grammar = grammar;
+        if (this.grammar.nullable) {
+            throw new Error('invalid grammar');
+        }
         this.count = n;
         this.nullable = count > 0;
     }
