@@ -3,7 +3,7 @@ function Sequence(a,b) {
     this.first = a;
     this.second = b;
 
-    this.match = function(input, callback) {
+    this.match = function(input) {
         let res = a.match(input);
         if (res.matched) {
             return b.match(input.substring(res.index));
@@ -14,7 +14,7 @@ function Sequence(a,b) {
 function OrderedChoice(a,b) {
     this.first = a;
     this.second = b;
-    this.match = function(input, callback) {
+    this.match = function(input) {
         let res;
         if (res = this.first.match(input))
             return res;
@@ -27,7 +27,7 @@ function OrderedChoice(a,b) {
 }
 
 function Optional(a) {
-    this.match = function(input,callback) {
+    this.match = function(input) {
         let res = a.match(input);
         if (res.matched) {
             return res;
@@ -41,16 +41,47 @@ function Optional(a) {
     }
 }
 
+function Not(a) {
+    this.match = function(input) {
+        let res = a.match(input);
+        if (res.matched) {
+            return ''; // fail
+        }
+        else {
+            return {
+                matched : true,
+                txt : input
+            };
+        }
+    }
+}
+
+function And(a, b) {
+    this.match = function(input) {
+        let res = a.match(input);
+        if (res.matched) {
+            return res;
+        }
+        else {
+            return '';
+        }
+    }
+}
+
 // primitives
 function Empty() {
-    this.match = function(input, callback) {
+    this.match = function(input) {
         return input;
     }
 }
 
-function Terminal(string) {
+function NonTerminal(grammar) {
+    this.match = grammar.match;
+}
+
+function Terminal(string, onMatch) {
     this.terminal = new RegExp('^' + string);
-    this.match = function(input, callback) {
+    this.match = function(input) {
         if (input.match(this.terminal)) {
             return {
                 matched : true,
