@@ -1,33 +1,3 @@
-// TODO change to use singular constructor
-function Sequence(a,b) {
-    this.first = a;
-    this.second = b;
-
-    this.match = function(input) {
-        let res = a.match(input);
-        if (res.matched) {
-            return b.match(input.substring(res.index));
-        }
-    }
-}
-
-
-
-function Optional(a) {
-    this.match = function(input) {
-        let res = a.match(input);
-        if (res.matched) {
-            return res;
-        }
-        else {
-            return {
-                matched: true,
-                txt : input
-            };
-        }
-    }
-}
-
 function Not(a) {
     this.match = function(input) {
         let res = a.match(input);
@@ -71,6 +41,14 @@ class Grammar {
 
     or(alternative) {
         return new OrderedChoice(this,alternative);
+    }
+
+    then(next) {
+        return new Sequence(this,next);
+    }
+
+    optionally() {
+        return new Optional(this);
     }
 }
 
@@ -116,9 +94,52 @@ class OrderedChoice extends Grammar {
     }
 }
 
+class Sequence extends Grammar {
+    constructor(a,b) {
+        super();
+        this.first = a;
+        this.second = b;
+    }
+
+    match(input) {
+        let res = this.first.match(input);
+        if (res.matched) {
+            let second_res = this.second.match(res.remaining);
+            if (second_res.matched) {
+                return second_res;
+            }
+            else {
+                return new Result(false, input);
+            }
+
+        }
+        else {
+            return res;
+        }
+    }
+}
+
+class Optional extends Grammar {
+    constructor(subGrammar) {
+        super();
+        this.subGrammar = subGrammar;
+    }
+
+    match(input) {
+        let res = this.subGrammar.match(input);
+        if (res.matched) {
+            return res;
+        }
+        else {
+            return new Result(true,input);
+        }
+    }
+}
+
 module.exports = {
     Terminal : Terminal,
     Empty : Empty,
     Sequence : Sequence,
+    Optional : Optional,
     OrderedChoice : OrderedChoice
 };
