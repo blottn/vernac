@@ -6,7 +6,9 @@ class Result {
 }
 
 class Grammar {
-    constructor() {}
+    constructor() {
+        this.nullable = false;
+    }
 
     match(input) {
         return new Result(true, input);
@@ -31,6 +33,10 @@ class Grammar {
     notBefore(next) {
         return new Not(this, next);
     }
+
+    times(n) {
+        return new NTimes(this, n);
+    }
 }
 
 // Primitives
@@ -39,6 +45,7 @@ class Terminal extends Grammar {
         super();
         this.word = word;
         this.re = new RegExp('^' + word);
+        this.nullable = word === '';
     }
     
     match(input) {
@@ -55,6 +62,7 @@ class Terminal extends Grammar {
 class Empty extends Terminal {
     constructor() {
         super('');
+        this.nullable = true;       
     }
 }
 
@@ -63,6 +71,7 @@ class Optional extends Grammar {
     constructor(subGrammar) {
         super();
         this.subGrammar = subGrammar;
+        this.nullable = true;
     }
 
     match(input) {
@@ -76,11 +85,34 @@ class Optional extends Grammar {
     }
 }
 
+class NTimes extends Grammar {
+    constructor(grammar, count) {
+        super();
+        this.grammar = grammar;
+        this.count = n;
+        this.nullable = count > 0;
+    }
+
+    match(input) {
+        let matches = 0;
+        let res;
+        for(res = {matched : true, remaining : input} ; res.matched ; res = this.grammar.match(res.remaining)) {
+            matches++;
+        }
+        if (matches >= this.count) {
+            return new Result(true, res.remaining);
+        }
+        return new Result(false, input);
+    }
+}
+
+// Order
 class OrderedChoice extends Grammar {
     constructor(a,b) {
         super();
         this.first = a;
         this.second = b;
+        this.nullable = a.nullable || b.nullable;
     }
 
     match(input) {
@@ -99,6 +131,7 @@ class Sequence extends Grammar {
         super();
         this.first = a;
         this.second = b;
+        this.nullable = a.nullable && b.nullable;
     }
 
     match(input) {
@@ -111,7 +144,6 @@ class Sequence extends Grammar {
             else {
                 return new Result(false, input);
             }
-
         }
         else {
             return res;
@@ -120,30 +152,12 @@ class Sequence extends Grammar {
 }
 
 // Lookaheads
-class Not extends Grammar {
-    constructor(current, forward) {
-        super();
-        this.current = current;
-        this.forward = forward;
-    }
-    
-    match(input) {
-        let res = this.current.match(input);
-        if (res.matched) {
-            let forward_res = this.forward.match(res.remaining);
-            if (!forward_res.matched) {
-                return new Result(true, res.remaining);
-            }
-        }
-        return new Result(false, input);
-    }
-}
-
 class Lookahead extends Grammar{
     constructor(current, forward) {
         super();
         this.current = current;
         this.forward = forward;
+        this.nullable = current.nullable;
     }
 
     match(input) {
@@ -151,6 +165,26 @@ class Lookahead extends Grammar{
         if (res.matched) {
             let forward_res = this.forward.match(res.remaining);
             if (forward_res.matched) {
+                return new Result(true, res.remaining);
+            }
+        }
+        return new Result(false, input);
+    }
+}
+
+class Not extends Grammar {
+    constructor(current, forward) {
+        super();
+        this.current = current;
+        this.forward = forward;
+        this.nullable = current.nullable;
+    }
+    
+    match(input) {
+        let res = this.current.match(input);
+        if (res.matched) {
+            let forward_res = this.forward.match(res.remaining);
+            if (!forward_res.matched) {
                 return new Result(true, res.remaining);
             }
         }
