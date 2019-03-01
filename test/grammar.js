@@ -11,6 +11,9 @@ with (grammar) {
                 let input = 'some large test string';
                 assert.equal(new Empty().match(input).remaining, input);
             });
+            it('should always be nullable', function() {
+                assert.equal(new Empty().nullable, true);
+            });
         });
     });
     describe('Terminal', function() {
@@ -27,6 +30,10 @@ with (grammar) {
                 let res = new Terminal('ab').match('abcdef');
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, input.substring(term.length));
+            });
+            it('should be nullable iff it is empty', function() {
+                assert.equal(new Terminal('').nullable, true);
+                assert.equal(new Terminal('a').nullable, false);
             });
         });
     });
@@ -50,6 +57,14 @@ with (grammar) {
                 let input = 'ab';
                 let peg = new Terminal('c').or(new Terminal('d'));
                 assert.equal(peg.match(input).matched, false);
+            });
+            it('should be nullable if either are nullable', function() {
+                let nullable = new Empty();
+                let a = new Terminal('a');
+                assert.equal(nullable.or(a).nullable, true);
+                assert.equal(a.or(nullable).nullable, true);
+                assert.equal(nullable.or(nullable).nullable, true);
+                assert.equal(a.or(a).nullable, false);
             });
         });
     });
@@ -80,6 +95,14 @@ with (grammar) {
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, '');
             });
+            it('should be nullable if both are nullable', function() {
+                let a = new Terminal('a');
+                let nullable = new Empty();
+                assert.equal(a.then(a).nullable, false);
+                assert.equal(a.then(nullable).nullable, false);
+                assert.equal(nullable.then(a).nullable, false);
+                assert.equal(nullable.then(nullable).nullable, true);
+            });
         });
     });
     describe('Optional', function() {
@@ -97,6 +120,12 @@ with (grammar) {
                 let res = optional.match('b');
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, 'b');
+            });
+            it('should always be nullable', function() {
+                let a = new Terminal('a');
+                let nullable = new Empty();
+                assert.equal(a.optionally().nullable, true);
+                assert.equal(nullable.optionally().nullable, true);
             });
         });
     });
@@ -126,6 +155,14 @@ with (grammar) {
                 assert.equal(res.matched, false);
                 assert.equal(res.remaining, 'cb');
             });
+            it('should be nullable if the first is nullable', function() {
+                let a = new Terminal('a');
+                let nullable = new Empty();
+                assert.equal(a.before(a).nullable, false);
+                assert.equal(a.before(nullable).nullable, false);
+                assert.equal(nullable.before(a).nullable, true);
+                assert.equal(nullable.before(nullable).nullable, true);
+            });
         });
     });
     describe('Not', function() {
@@ -153,6 +190,14 @@ with (grammar) {
                 let res = cut.match('x');
                 assert.equal(res.matched, false);
                 assert.equal(res.remaining, 'x');
+            });
+            it('should be nullable if the first is nullable', function() {
+                let a = new Terminal('a');
+                let nullable = new Empty();
+                assert.equal(a.notBefore(a).nullable, false);
+                assert.equal(a.notBefore(nullable).nullable, false);
+                assert.equal(nullable.notBefore(a).nullable, true);
+                assert.equal(nullable.notBefore(nullable).nullable, true);
             });
         });
     });
