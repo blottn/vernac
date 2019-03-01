@@ -1,30 +1,3 @@
-function Not(a) {
-    this.match = function(input) {
-        let res = a.match(input);
-        if (res.matched) {
-            return ''; // fail
-        }
-        else {
-            return {
-                matched : true,
-                txt : input
-            };
-        }
-    }
-}
-
-function And(a, b) {
-    this.match = function(input) {
-        let res = a.match(input);
-        if (res.matched) {
-            return res;
-        }
-        else {
-            return '';
-        }
-    }
-}
-
 class Result {
     constructor(matched, remaining) {
         this.matched = matched;
@@ -50,8 +23,17 @@ class Grammar {
     optionally() {
         return new Optional(this);
     }
+
+    before(next) {
+        return new Lookahead(this,next);
+    }
+
+    notBefore(next) {
+        return new Not(this, next);
+    }
 }
 
+// Primitives
 class Terminal extends Grammar {
     constructor(word) {
         super();
@@ -73,6 +55,24 @@ class Terminal extends Grammar {
 class Empty extends Terminal {
     constructor() {
         super('');
+    }
+}
+
+// Count operators
+class Optional extends Grammar {
+    constructor(subGrammar) {
+        super();
+        this.subGrammar = subGrammar;
+    }
+
+    match(input) {
+        let res = this.subGrammar.match(input);
+        if (res.matched) {
+            return res;
+        }
+        else {
+            return new Result(true,input);
+        }
     }
 }
 
@@ -119,27 +119,46 @@ class Sequence extends Grammar {
     }
 }
 
-class Optional extends Grammar {
-    constructor(subGrammar) {
+// Lookaheads
+class Not extends Grammar {
+    constructor(current, forward) {
         super();
-        this.subGrammar = subGrammar;
+        this.current = current;
+        this.forward = forward;
+    }
+    
+    match(input) {
+        let res = this.current.match(input);
+        if (res.matched) {
+            let forward_res = this.forward.match(res.remaining);
+            if (!forward_res.matched) {
+                return new Result(true, res.remaining);
+            }
+        }
+        return new Result(false, input);
+    }
+}
+
+class Lookahead extends Grammar{
+    constructor(current, forward) {
+        super();
+        this.current = current;
+        this.forward = forward;
     }
 
     match(input) {
-        let res = this.subGrammar.match(input);
+        let res = this.current.match(input);
         if (res.matched) {
-            return res;
+            let forward_res = this.forward.match(res.remaining);
+            if (forward_res.matched) {
+                return new Result(true, res.remaining);
+            }
         }
-        else {
-            return new Result(true,input);
-        }
+        return new Result(false, input);
     }
 }
 
 module.exports = {
     Terminal : Terminal,
     Empty : Empty,
-    Sequence : Sequence,
-    Optional : Optional,
-    OrderedChoice : OrderedChoice
 };
