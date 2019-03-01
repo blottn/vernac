@@ -11,20 +11,7 @@ function Sequence(a,b) {
     }
 }
 
-function OrderedChoice(a,b) {
-    this.first = a;
-    this.second = b;
-    this.match = function(input) {
-        let res;
-        if ((res = this.first.match(input)) && res.matched)
-            return res;
-        else if ((res = this.second.match(input)) && res.matched)
-            return res;
-        else {
-            return '';
-        }
-    }
-}
+
 
 function Optional(a) {
     this.match = function(input) {
@@ -82,10 +69,12 @@ class Grammar {
         return new Result(true, input);
     }
 
+    or(alternative) {
+        return new OrderedChoice(this,alternative);
+    }
 }
 
 class Terminal extends Grammar {
-
     constructor(word) {
         super();
         this.word = word;
@@ -97,12 +86,33 @@ class Terminal extends Grammar {
         if (res) {
             return new Result(true, input.substring(res.index + this.word.length));
         }
+        else {
+            return new Result(false, input);
+        }
     }
 }
 
 class Empty extends Terminal {
     constructor() {
         super('');
+    }
+}
+
+class OrderedChoice extends Grammar {
+    constructor(a,b) {
+        super();
+        this.first = a;
+        this.second = b;
+    }
+
+    match(input) {
+        let res = this.first.match(input);
+        if (res.matched) {
+            return res;
+        }
+        else {
+            return this.second.match(input);
+        }
     }
 }
 

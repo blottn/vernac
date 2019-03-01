@@ -5,11 +5,11 @@ with (grammar) {
     describe('Empty', function () {
         describe('#match()', function() {
             it('should match nothing', function() {
-                assert.equal(new Empty().match('').remaining,'');
+                assert.equal(new Empty().match('').remaining, '');
             });
             it('should match anything', function() {
                 let input = 'some large test string';
-                assert.equal(new Empty().match(input).remaining,input);
+                assert.equal(new Empty().match(input).remaining, input);
             });
         });
     });
@@ -26,7 +26,7 @@ with (grammar) {
                 let term = 'ab';
                 let res = new Terminal('ab').match('abcdef');
                 assert.equal(res.matched, true);
-                assert.equal(res.remaining,input.substring(term.length));
+                assert.equal(res.remaining, input.substring(term.length));
             });
         });
     });
@@ -34,22 +34,22 @@ with (grammar) {
         describe('#match()', function() {
             it('should match first', function() {
                 let input = 'ab';
-                let peg = new OrderedChoice(new Terminal('a'),new Terminal('b'));
+                let peg = new OrderedChoice(new Terminal('a'), new Terminal('b'));
                 let res = peg.match(input);
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, 'b');
             });
             it('should match second if first fails', function() {
                 let input = 'ab';
-                let peg = new OrderedChoice(new Terminal('b'),new Terminal('a'));
+                let peg = new OrderedChoice(new Terminal('b'), new Terminal('a'));
                 let res = peg.match(input);
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining,'b');
             });
             it('should fail', function() {
                 let input = 'ab';
-                let peg = new OrderedChoice(new Terminal('c'),new Terminal('d'));
-                assert.equal(peg.match(input),''); // TODO consider changing this error val
+                let peg = new OrderedChoice(new Terminal('c'), new Terminal('d'));
+                assert.equal(peg.match(input).matched, false);
             });
         });
     });
