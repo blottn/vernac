@@ -242,4 +242,17 @@ with (grammar) {
             });
         });
     });
+    describe('Listeners', function() {
+        it('should call callback on a match', function() {
+            let a = new Terminal('a');
+            let matched = false;
+            a.listen((input, result) => {
+                console.log(input);
+                console.log(result);
+                matched = true;
+            });
+            a.parse('a');
+            assert.equal(matched, true);
+        });
+    });
 }
