@@ -16,9 +16,9 @@ function OrderedChoice(a,b) {
     this.second = b;
     this.match = function(input) {
         let res;
-        if (res = this.first.match(input))
+        if ((res = this.first.match(input)) && res.matched)
             return res;
-        else if (res = this.second.match(input))
+        else if ((res = this.second.match(input)) && res.matched)
             return res;
         else {
             return '';
@@ -68,31 +68,41 @@ function And(a, b) {
     }
 }
 
-// primitives
-function Empty() {
-    this.match = function(input) {
-        return input;
+class Result {
+    constructor(matched, remaining) {
+        this.matched = matched;
+        this.remaining = remaining;
     }
 }
 
-function NonTerminal(grammar) {
-    this.match = grammar.match;
+class Grammar {
+    constructor() {}
+
+    match(input) {
+        return new Result(true, input);
+    }
+
 }
 
-function Terminal(string, onMatch) {
-    this.terminal = new RegExp('^' + string);
-    this.match = function(input) {
-        if (input.match(this.terminal)) {
-            return {
-                matched : true,
-                txt : input.substring(string.length)
-            };
+class Terminal extends Grammar {
+
+    constructor(word) {
+        super();
+        this.word = word;
+        this.re = new RegExp('^' + word);
+    }
+    
+    match(input) {
+        let res = this.re.exec(input);
+        if (res) {
+            return new Result(true, input.substring(res.index + this.word.length));
         }
-        else {
-            // error until matched
-            // something todo with continue from here
-            input.indexOf(this.terminal);
-        }
+    }
+}
+
+class Empty extends Terminal {
+    constructor() {
+        super('');
     }
 }
 

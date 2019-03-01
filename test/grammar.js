@@ -5,11 +5,11 @@ with (grammar) {
     describe('Empty', function () {
         describe('#match()', function() {
             it('should match nothing', function() {
-                assert.equal(new Empty().match(''),'');
+                assert.equal(new Empty().match('').remaining,'');
             });
             it('should match anything', function() {
                 let input = 'some large test string';
-                assert.equal(new Empty().match(input),input);
+                assert.equal(new Empty().match(input).remaining,input);
             });
         });
     });
@@ -19,14 +19,14 @@ with (grammar) {
                 let input = 'asdf';
                 let res = new Terminal('').match(input);
                 assert.equal(res.matched, true);
-                assert.equal(res.txt, input);
+                assert.equal(res.remaining, input);
             });
             it('should match strings', function() {
                 let input = 'abcdef';
                 let term = 'ab';
                 let res = new Terminal('ab').match('abcdef');
                 assert.equal(res.matched, true);
-                assert.equal(res.txt,input.substring(term.length));
+                assert.equal(res.remaining,input.substring(term.length));
             });
         });
     });
@@ -37,14 +37,14 @@ with (grammar) {
                 let peg = new OrderedChoice(new Terminal('a'),new Terminal('b'));
                 let res = peg.match(input);
                 assert.equal(res.matched, true);
-                assert.equal(res.txt, 'b');
+                assert.equal(res.remaining, 'b');
             });
             it('should match second if first fails', function() {
                 let input = 'ab';
                 let peg = new OrderedChoice(new Terminal('b'),new Terminal('a'));
                 let res = peg.match(input);
                 assert.equal(res.matched, true);
-                assert.equal(res.txt,'b');
+                assert.equal(res.remaining,'b');
             });
             it('should fail', function() {
                 let input = 'ab';
