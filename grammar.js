@@ -1,8 +1,9 @@
 class Result {
-    constructor(matched, result, remaining) {
+    constructor(matched, result, remaining, attributes) {
         this.matched = matched;
         this.result = result;
         this.remaining = remaining;
+        this.attributes = attributes;
     }
 }
 
@@ -25,8 +26,8 @@ class Grammar {
         return res;
     }
 
-    onMatch(input, result) {
-        (this.listener ? this.listener(input, result) : undefined);
+    onMatch(res, input) {
+        return (this.listener ? this.listener(res, input) : undefined);
     }
 
     or(alternative) {
@@ -120,13 +121,15 @@ class NTimes extends Grammar {
         let matches = 0;
         let res;
         let matched = '';
+        let attrs = [];
         for (res = this.grammar.parse(input, true) ; res.matched; res = this.grammar.parse(res.remaining, true)) {
             matches++;
             matched += res.result;
+            attrs.concat(res.attributes);
             res = this.grammar.parse(res.remaining, true);
         }
         if (matches >= this.count) {
-            return new Result(true, matched, res.remaining);
+            return new Result(true, matched, res.remaining, attrs);
         }
         return new Result(false, '', input);
     }
