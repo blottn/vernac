@@ -8,5 +8,5 @@ Build up parsing expressions using the functions
 
 eg:
 ```Javascript
-let sum = Ordered(Terminal(/\d/),Terminal(/+/),Terminal(/\d/));
+let sum = Terminal('\\d').then('+').then(Terminal('\\d'));
 ```
