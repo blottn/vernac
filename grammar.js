@@ -66,7 +66,7 @@ class Terminal extends Grammar {
         let res = this.re.exec(input);
         if (res) {
             let matched = res.index == 0 || !strict;
-            return new Result(matched, input.substring(res.index + this.word.length));
+            return new Result(matched, input.substring(res.index + res[0].length));
         }
         else {
             return new Result(false, input);
