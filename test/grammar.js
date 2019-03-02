@@ -3,13 +3,13 @@ var grammar = require('../grammar.js');
 
 with (grammar) {
     describe('Empty', function () {
-        describe('#match()', function() {
+        describe('#parse()', function() {
             it('should match nothing', function() {
-                assert.equal(new Empty().match('').remaining, '');
+                assert.equal(new Empty().parse('').remaining, '');
             });
             it('should match anything', function() {
                 let input = 'some large test string';
-                assert.equal(new Empty().match(input).remaining, input);
+                assert.equal(new Empty().parse(input).remaining, input);
             });
             it('should always be nullable', function() {
                 assert.equal(new Empty().nullable, true);
@@ -17,17 +17,17 @@ with (grammar) {
         });
     });
     describe('Terminal', function() {
-        describe('#match()', function() {
+        describe('#parse()', function() {
             it('should match when empty', function() {
                 let input = 'asdf';
-                let res = new Terminal('').match(input);
+                let res = new Terminal('').parse(input);
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, input);
             });
             it('should match strings', function() {
                 let input = 'abcdef';
                 let term = 'ab';
-                let res = new Terminal('ab').match('abcdef');
+                let res = new Terminal('ab').parse('abcdef');
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, input.substring(term.length));
             });
@@ -38,25 +38,25 @@ with (grammar) {
         });
     });
     describe('OrderedChoice', function() {
-        describe('#match()', function() {
+        describe('#parse()', function() {
             it('should match first', function() {
                 let input = 'ab';
                 let peg = new Terminal('a').or(new Terminal('b'));
-                let res = peg.match(input);
+                let res = peg.parse(input);
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, 'b');
             });
             it('should match second if first fails', function() {
                 let input = 'ab';
                 let peg = new Terminal('b').or(new Terminal('a'));
-                let res = peg.match(input);
+                let res = peg.parse(input);
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining,'b');
             });
             it('should fail', function() {
                 let input = 'ab';
                 let peg = new Terminal('c').or(new Terminal('d'));
-                assert.equal(peg.match(input).matched, false);
+                assert.equal(peg.parse(input).matched, false);
             });
             it('should be nullable if either are nullable', function() {
                 let nullable = new Empty();
@@ -69,12 +69,12 @@ with (grammar) {
         });
     });
     describe('Sequence', function() {
-        describe('#match()', function() {
+        describe('#parse()', function() {
             it('"ab" should fail if "a" and not "b"', function() {
                 let a = new Terminal('a');
                 let b = new Terminal('b');
                 let seq = a.then(b);
-                let res = seq.match('ac');
+                let res = seq.parse('ac');
                 assert.equal(res.matched, false);
                 assert.equal(res.remaining, 'ac');
             });
@@ -82,7 +82,7 @@ with (grammar) {
                 let a = new Terminal('a');
                 let b = new Terminal('b');
                 let seq = a.then(b);
-                let res = seq.match('cb');
+                let res = seq.parse('cb');
                 assert.equal(res.matched, false);
                 assert.equal(res.remaining, 'cb');
 
@@ -91,7 +91,7 @@ with (grammar) {
                 let a = new Terminal('a');
                 let b = new Terminal('b');
                 let seq = a.then(b);
-                let res = seq.match('ab');
+                let res = seq.parse('ab');
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, '');
             });
@@ -106,18 +106,18 @@ with (grammar) {
         });
     });
     describe('Optional', function() {
-        describe('#match()', function() {
+        describe('#parse()', function() {
             it('a? should pass if "a"', function() {
                 let a = new Terminal('a');
                 let optional = a.optionally();
-                let res = optional.match('a');
+                let res = optional.parse('a');
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, '');
             });
             it('a? should pass if not "a"', function() {
                 let a = new Terminal('a');
                 let optional = a.optionally();
-                let res = optional.match('b');
+                let res = optional.parse('b');
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, 'b');
             });
@@ -130,12 +130,12 @@ with (grammar) {
         });
     });
     describe('Lookahead', function() {
-        describe('#match()', function() {
+        describe('#parse()', function() {
             it('"a&b" should match "a" and return just the "a" match', function() {
                 let a = new Terminal('a');
                 let b = new Terminal('b');
                 let lookahead = a.before(b);
-                let res = lookahead.match('ab');
+                let res = lookahead.parse('ab');
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, 'b');
             });
@@ -143,7 +143,7 @@ with (grammar) {
                 let a = new Terminal('a');
                 let b = new Terminal('b');
                 let lookahead = a.before(b);
-                let res = lookahead.match('ac');
+                let res = lookahead.parse('ac');
                 assert.equal(res.matched, false);
                 assert.equal(res.remaining, 'ac');
             });
@@ -151,7 +151,7 @@ with (grammar) {
                 let a = new Terminal('a');
                 let b = new Terminal('b');
                 let lookahead = a.before(b);
-                let res = lookahead.match('cb');
+                let res = lookahead.parse('cb');
                 assert.equal(res.matched, false);
                 assert.equal(res.remaining, 'cb');
             });
@@ -166,12 +166,12 @@ with (grammar) {
         });
     });
     describe('Not', function() {
-        describe('#match()', function() {
+        describe('#parse()', function() {
             it('"a!b" should fail if "a" then "b"', function() {
                 let a = new Terminal('a');
                 let b = new Terminal('b');
                 let cut = a.notBefore(b);
-                let res = cut.match('ab');
+                let res = cut.parse('ab');
                 assert.equal(res.matched, false);
                 assert.equal(res.remaining, 'ab');
             });
@@ -179,7 +179,7 @@ with (grammar) {
                 let a = new Terminal('a');
                 let b = new Terminal('b');
                 let cut = a.notBefore(b);
-                let res = cut.match('ac');
+                let res = cut.parse('ac');
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, 'c');
             });
@@ -187,7 +187,7 @@ with (grammar) {
                 let a = new Terminal('a');
                 let b = new Terminal('b');
                 let cut = a.notBefore(b);
-                let res = cut.match('x');
+                let res = cut.parse('x');
                 assert.equal(res.matched, false);
                 assert.equal(res.remaining, 'x');
             });
@@ -206,8 +206,8 @@ with (grammar) {
             it('should match anything 0 times', function() {
                 let a = new Terminal('a');
                 let zero_a = a.times(0);
-                assert.equal(zero_a.match('asdf').matched, true);
-                assert.equal(zero_a.match('asdf').remaining, 'sdf');
+                assert.equal(zero_a.parse('asdf').matched, true);
+                assert.equal(zero_a.parse('asdf').remaining, 'sdf');
                 
                 assert.equal(zero_a.match('').matched, true);
                 assert.equal(zero_a.match('').remaining, '');
@@ -215,30 +215,30 @@ with (grammar) {
             it('should match with 1 times', function() {
                 let a = new Terminal('a');
                 let one_a = a.times(1);
-                assert.equal(one_a.match('asdf').matched, true);
-                assert.equal(one_a.match('asdf').remaining, 'sdf');
+                assert.equal(one_a.parse('asdf').matched, true);
+                assert.equal(one_a.parse('asdf').remaining, 'sdf');
             });
             it('should match multiple times', function() {
                 let a = new Terminal('a');
                 let one_a = a.times(1);
                 let zero_a = a.times(0);
 
-                assert.equal(one_a.match('aaaas').matched, true);
-                assert.equal(one_a.match('aaaas').remaining, 's');
+                assert.equal(one_a.parse('aaaas').matched, true);
+                assert.equal(one_a.parse('aaaas').remaining, 's');
 
-                assert.equal(zero_a.match('aaaas').matched, true);
-                assert.equal(zero_a.match('aaaas').remaining, 's');
+                assert.equal(zero_a.parse('aaaas').matched, true);
+                assert.equal(zero_a.parse('aaaas').remaining, 's');
             });
             it('should fail if not first', function() {
                 let a = new Terminal('a');
                 let one_a = a.times(1);
                 let zero_a = a.times(0);
 
-                assert.equal(one_a.match('baaaas').matched, false);
-                assert.equal(one_a.match('baaaas').remaining, 'baaaas');
+                assert.equal(one_a.parse('baaaas').matched, false);
+                assert.equal(one_a.parse('baaaas').remaining, 'baaaas');
 
-                assert.equal(zero_a.match('baaaas').matched, true);
-                assert.equal(zero_a.match('baaaas').remaining, 'baaaas');
+                assert.equal(zero_a.parse('baaaas').matched, true);
+                assert.equal(zero_a.parse('baaaas').remaining, 'baaaas');
             });
         });
     });
@@ -247,8 +247,6 @@ with (grammar) {
             let a = new Terminal('a');
             let matched = false;
             a.listen((input, result) => {
-                console.log(input);
-                console.log(result);
                 matched = true;
             });
             a.parse('a');
