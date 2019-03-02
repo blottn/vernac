@@ -1,6 +1,7 @@
 class Result {
-    constructor(matched, remaining) {
+    constructor(matched, result, remaining) {
         this.matched = matched;
+        this.result = result;
         this.remaining = remaining;
     }
 }
@@ -11,13 +12,13 @@ class Grammar {
     }
 
     match(input, strict = false) {
-        return new Result(true, input);
+        return new Result(true, '', input);
     }
 
     parse(input, strict = false) {
         let res = this.match(input, strict);
         if (res.matched)
-            this.onMatch(input, res);
+            this.onMatch(res, input);
         return res;
     }
     onMatch(input, result) {
@@ -66,10 +67,10 @@ class Terminal extends Grammar {
         let res = this.re.exec(input);
         if (res) {
             let matched = res.index == 0 || !strict;
-            return new Result(matched, input.substring(res.index + res[0].length));
+            return new Result(matched, res[0], input.substring(res.index + res[0].length));
         }
         else {
-            return new Result(false, input);
+            return new Result(false, '', input);
         }
     }
 }
@@ -95,7 +96,7 @@ class Optional extends Grammar {
             return res;
         }
         else {
-            return new Result(true, input);
+            return new Result(true, '', input);
         }
     }
 }
@@ -114,14 +115,16 @@ class NTimes extends Grammar {
     match(input) {
         let matches = 0;
         let res;
+        let matched = '';
         for (res = this.grammar.parse(input, true) ; res.matched; res = this.grammar.parse(res.remaining, true)) {
             matches++;
+            matched += res.result;
             res = this.grammar.parse(res.remaining, true);
         }
         if (matches >= this.count) {
-            return new Result(true, res.remaining);
+            return new Result(true, matched, res.remaining);
         }
-        return new Result(false, input);
+        return new Result(false, '', input);
     }
 }
 
@@ -161,7 +164,7 @@ class Sequence extends Grammar {
                 return second_res;
             }
             else {
-                return new Result(false, input);
+                return new Result(false, '', input);
             }
         }
         else {
@@ -184,10 +187,10 @@ class Lookahead extends Grammar{
         if (res.matched) {
             let forward_res = this.forward.parse(res.remaining, strict);
             if (forward_res.matched) {
-                return new Result(true, res.remaining);
+                return res;
             }
         }
-        return new Result(false, input);
+        return new Result(false, '', input);
     }
 }
 
@@ -204,10 +207,10 @@ class Not extends Grammar {
         if (res.matched) {
             let forward_res = this.forward.parse(res.remaining, strict);
             if (!forward_res.matched) {
-                return new Result(true, res.remaining);
+                return res;
             }
         }
-        return new Result(false, input);
+        return new Result(false, '', input);
     }
 }
 
