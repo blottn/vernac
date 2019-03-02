@@ -17,8 +17,11 @@ class Grammar {
 
     parse(input, strict = false) {
         let res = this.match(input, strict);
+        let attributes;
         if (res.matched)
-            this.onMatch(res, input);
+            attributes = this.onMatch(res, input);
+        if (attributes)
+            res.attributes = attributes;
         return res;
     }
 
