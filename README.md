@@ -1,4 +1,4 @@
-# Idiom
+# Vernac
 
 ## Description
 Simple DSL for creating parsing expression grammars
