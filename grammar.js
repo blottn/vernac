@@ -21,6 +21,7 @@ class Grammar {
             this.onMatch(res, input);
         return res;
     }
+
     onMatch(input, result) {
         (this.listener ? this.listener(input, result) : undefined);
     }
