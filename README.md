@@ -1,7 +1,5 @@
 # Vernac
-
-## Description
-Simple DSL for creating parsing expression grammars
+A simple DSL for creating parsing expression grammars
 
 ## Usage
 Build up parsing expressions using the functions
