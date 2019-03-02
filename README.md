@@ -19,9 +19,8 @@ sum.parse("1+2");
 
 ## API
 
-### Primitives
 
-#### Terminal
+### Terminal
 
 Matches a basic symbol, eg a number is:
 
@@ -31,7 +30,7 @@ or more complicated regex:
 
 `let ident = new Terminal('[A-Za-z]+\\w*');`
 
-#### Empty
+### Empty
 
 Matches explicitly nothing, a synonymous with `new Terminal('');`
 
@@ -47,16 +46,10 @@ a.listen((result_obj, input) => {
 a.parse('a');
 ```
 
-### Combinations
-
-We can now combine these to make more complicated expressions.
-Here are all the basic combinators:
-
-
-#### Ordered Choice
+### Ordered Choice
 Noted as `a | b`. Tries for a first and then b.
 
-##### Usage
+#### Usage
 ```Javascript
 let a = new Terminal('a');
 let b = new Terminal('b');
@@ -69,10 +62,10 @@ choice.parse('ab'); // matches a
 ```
 
 
-#### Sequence
+### Sequence
 Notes as `ab`. Needs to find a and then b.
 
-##### Usage
+#### Usage
 ```Javascript
 let a = new Terminal('a');
 let b = new Terminal('b');
@@ -84,11 +77,11 @@ seq.parse('b'); // fails
 seq.parse('ab'); // succeeds
 ```
 
-#### Lookahead
+### Lookahead
 Noted as `a&b`. Tries to find an `a` followed by a `b`. Only remembers the `a`.
 Similar to sequence but only remembers the first.
 
-##### Usage
+#### Usage
 ```Javascript
 let a = new Terminal('a');
 let b = new Terminal('b');
@@ -100,12 +93,12 @@ lookahead.parse('b') // fails
 lookahead.parse('ab') // succeeds and returns 'a' with 'b' still to be parsed
 ```
 
-#### Negated Lookahead
+### Negated Lookahead
 Noted as `a!b`. Tries to find an `a` explicitly not followed by a `b`. Only
 remembers the `a`.
 Similar to lookahead but inverted.
 
-##### Usage
+#### Usage
 ```Javascript
 let a = new Terminal('a');
 let b = new Terminal('b');
@@ -118,10 +111,10 @@ negated.parse('ab'); // fails
 negated.parse('ac'); // succeeds and returns 'a' with 'c' still to be parsed
 ```
 
-#### 0 or more
+### 0 or more
 Noted as `a*`. Tries to match `a` 0 or more times.
 
-##### Usage
+#### Usage
 ```Javascript
 let a = new Terminal('a');
 
@@ -133,10 +126,10 @@ zero_more.parse('aaac'); // succeeds and returns 'aaa' with 'c' still to be pars
 zero_more.parse(''); // succeeds
 ```
 
-#### 1 or more
+### 1 or more
 Noted as `a+`. Tries to match `a` 1 or more times.
 
-##### Usage
+#### Usage
 ```Javascript
 let a = new Terminal('a');
 
@@ -148,10 +141,10 @@ one_more.parse('aaac'); // succeeds and returns 'aaa' with 'c' still to be parse
 one_more.parse(''); // fails
 ```
 
-#### Optional
+### Optional
 Noted as `a?`. Tries to match `a` 0 or 1 times.
 
-##### Usage
+#### Usage
 ```Javascript
 let a = new Terminal('a');
 
