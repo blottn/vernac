@@ -51,6 +51,7 @@ class Grammar {
 
     listen(listener) {
         this.listener = listener;
+        return this;
     }
 }
 
