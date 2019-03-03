@@ -31,6 +31,10 @@ with (grammar) {
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, input.substring(term.length));
             });
+            it('should build ast correctly', function() {
+                let a = new Terminal('a');
+                assert.equal(a.parse('a').ast, 'a');
+            });
             it('should be nullable iff it is empty', function() {
                 assert.equal(new Terminal('').nullable, true);
                 assert.equal(new Terminal('a').nullable, false);
@@ -95,6 +99,26 @@ with (grammar) {
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, '');
             });
+            it('should build AST correctly', function() {
+                let a = new Terminal('a');
+                let b = new Terminal('b');
+                let seq = a.then(b);
+                seq.listen((r) => {
+                    return { assertion : r.ast };
+                });
+                let res = seq.parse('ab');
+                assert.deepEqual(res, {
+                    matched: true,
+                    result: 'ab',
+                    remaining: '',
+                    ast: {
+                        assertion: {
+                            left: 'a',
+                            right: 'b'
+                        }
+                    }
+                });
+            });
             it('should be nullable if both are nullable', function() {
                 let a = new Terminal('a');
                 let nullable = new Empty();
@@ -120,6 +144,12 @@ with (grammar) {
                 let res = optional.parse('b');
                 assert.equal(res.matched, true);
                 assert.equal(res.remaining, 'b');
+            });
+            it('should build ast correctly', function() {
+                let a = new Terminal('a');
+                let opt = a.optionally();
+                assert.equal(opt.parse('a').ast, 'a');
+                assert.equal(opt.parse('').ast, undefined);
             });
             it('should always be nullable', function() {
                 let a = new Terminal('a');
@@ -154,6 +184,18 @@ with (grammar) {
                 let res = lookahead.parse('cb');
                 assert.equal(res.matched, false);
                 assert.equal(res.remaining, 'cb');
+            });
+            it('should build ast correctly', function() {
+                let a = new Terminal('a');
+                let b = new Terminal('b');
+                let cut = a.notBefore(b);
+                let res = cut.parse('ac');
+                assert.deepEqual(res, {
+                    matched: true,
+                    result: 'a',
+                    remaining: 'c',
+                    ast: 'a'
+                });
             });
             it('should be nullable if the first is nullable', function() {
                 let a = new Terminal('a');
@@ -191,6 +233,18 @@ with (grammar) {
                 assert.equal(res.matched, false);
                 assert.equal(res.remaining, 'x');
             });
+            it('should build ast correctly', function() {
+                let a = new Terminal('a');
+                let b = new Terminal('b');
+                let cut = a.notBefore(b);
+                let res = cut.parse('ac');
+                assert.deepEqual(res, {
+                    matched: true,
+                    result: 'a',
+                    remaining: 'c',
+                    ast: 'a'
+                });
+            });
             it('should be nullable if the first is nullable', function() {
                 let a = new Terminal('a');
                 let nullable = new Empty();
@@ -208,7 +262,6 @@ with (grammar) {
                 let zero_a = a.times(0);
                 assert.equal(zero_a.parse('asdf').matched, true);
                 assert.equal(zero_a.parse('asdf').remaining, 'sdf');
-                
                 assert.equal(zero_a.match('').matched, true);
                 assert.equal(zero_a.match('').remaining, '');
             });
@@ -222,12 +275,26 @@ with (grammar) {
                 let a = new Terminal('a');
                 let one_a = a.times(1);
                 let zero_a = a.times(0);
-
                 assert.equal(one_a.parse('aaaas').matched, true);
                 assert.equal(one_a.parse('aaaas').remaining, 's');
-
                 assert.equal(zero_a.parse('aaaas').matched, true);
                 assert.equal(zero_a.parse('aaaas').remaining, 's');
+            });
+            it('should throw when item is nullable', function () {
+                let a = new Empty();
+                assert.throws(() => {
+                    a.times(0);
+                },
+                TypeError,
+                'Invalid Grammar'
+                );
+            });
+            it('should build ast correctly', function() {
+                let a = new Terminal('a');
+                let times = a.times(0);
+                assert.deepEqual(times.parse('').ast, []);
+                assert.deepEqual(times.parse('a').ast, ['a']);
+                assert.deepEqual(times.parse('aaaa').ast, ['a','a','a','a']);
             });
             it('should fail if not first', function() {
                 let a = new Terminal('a');
@@ -236,7 +303,6 @@ with (grammar) {
 
                 assert.equal(one_a.parse('baaaas').matched, false);
                 assert.equal(one_a.parse('baaaas').remaining, 'baaaas');
-
                 assert.equal(zero_a.parse('baaaas').matched, true);
                 assert.equal(zero_a.parse('baaaas').remaining, 'baaaas');
             });
