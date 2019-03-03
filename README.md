@@ -154,3 +154,8 @@ optional.parse('aa'); // succeeds and returns 'a' with 'a' still to be parsed
 optional.parse('ab'); // succeeds and returns 'a' with 'b' still to be parsed
 optional.parse('b'); //succeeds and returns '' with 'b' still to be parsed
 ```
+
+## TODO
+
+- Add tests to verify the result field.
+- Add stronger tests for listeners and ast building
