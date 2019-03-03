@@ -1,3 +1,4 @@
+
 class Result {
     constructor(matched, result, remaining, ast) {
         this.matched = matched;
@@ -25,44 +26,48 @@ class Grammar {
         return res;
     }
 
-    or(alternative) {
-        return new OrderedChoice(this,alternative);
+    or(alternative, listener) {
+        return new OrderedChoice(this,alternative, listener);
     }
 
-    then(next) {
-        return new Sequence(this,next);
+    then(next, listener) {
+        return new Sequence(this,next, listener);
     }
 
-    optionally() {
-        return new Optional(this);
+    optionally(listener) {
+        return new Optional(this, listener);
     }
 
-    before(next) {
-        return new Lookahead(this,next);
+    before(next, listener) {
+        return new Lookahead(this,next, listener);
     }
 
-    notBefore(next) {
-        return new Not(this, next);
+    notBefore(next, listener) {
+        return new Not(this, next, listener);
     }
 
-    times(n) {
-        return new NTimes(this, n);
+    times(n, listener) {
+        return new NTimes(this, n, listener);
     }
 
     listen(listener) {
         this.listener = listener;
         return this;
     }
+
+    default_listener(r) {
+        return r.ast;
+    }
 }
 
 // Primitives
 class Terminal extends Grammar {
-    constructor(word) {
+    constructor(word, listener) {
         super();
         this.word = word;
         this.re = new RegExp('^' + word);
         this.nullable = word === '';
-        this.listener = (res) => res.result;
+        this.listener = listener || this.default_listener;
     }
     
     match(input, strict) {
@@ -75,19 +80,25 @@ class Terminal extends Grammar {
             return new Result(false, '', input);
         }
     }
+
+    default_listener(r) {
+        return r.result;
+    }
 }
 
 class Empty extends Terminal {
-    constructor() {
+    constructor(listener) {
         super('');
+        this.listener = listener || this.default_listener;
         this.nullable = true;       
     }
 }
 
 // Count operators
 class Optional extends Grammar {
-    constructor(subGrammar) {
+    constructor(subGrammar, listener) {
         super();
+        this.listener = listener || this.default_listener;
         this.subGrammar = subGrammar;
         this.nullable = true;
     }
@@ -104,8 +115,9 @@ class Optional extends Grammar {
 }
 
 class NTimes extends Grammar {
-    constructor(grammar, count) {
+    constructor(grammar, count, listener) {
         super();
+        this.listener = listener || this.default_listener;
         this.grammar = grammar;
         if (this.grammar.nullable) {
             throw new TypeError('Invalid grammar');
@@ -134,8 +146,9 @@ class NTimes extends Grammar {
 
 // Order
 class OrderedChoice extends Grammar {
-    constructor(a,b) {
+    constructor(a,b, listener) {
         super();
+        this.listener = listener || this.default_listener;
         this.first = a;
         this.second = b;
         this.nullable = a.nullable || b.nullable;
@@ -153,8 +166,9 @@ class OrderedChoice extends Grammar {
 }
 
 class Sequence extends Grammar {
-    constructor(a,b) {
+    constructor(a,b, listener) {
         super();
+        this.listener = listener || this.default_listener;
         this.first = a;
         this.second = b;
         this.nullable = a.nullable && b.nullable;
@@ -181,8 +195,9 @@ class Sequence extends Grammar {
 
 // Lookaheads
 class Lookahead extends Grammar{
-    constructor(current, forward) {
+    constructor(current, forward, listener) {
         super();
+        this.listener = listener || this.default_listener;
         this.current = current;
         this.forward = forward;
         this.nullable = current.nullable;
@@ -201,8 +216,9 @@ class Lookahead extends Grammar{
 }
 
 class Not extends Grammar {
-    constructor(current, forward) {
+    constructor(current, forward, listener) {
         super();
+        this.listener = listener || this.default_listener;
         this.current = current;
         this.forward = forward;
         this.nullable = current.nullable;

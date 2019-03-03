@@ -102,9 +102,8 @@ with (grammar) {
             it('should build AST correctly', function() {
                 let a = new Terminal('a');
                 let b = new Terminal('b');
-                let seq = a.then(b);
-                seq.listen((r) => {
-                    return { assertion : r.ast };
+                let seq = a.then(b,(r) => {
+                    return { assertion : r.ast};
                 });
                 let res = seq.parse('ab');
                 assert.deepEqual(res, {
@@ -310,17 +309,13 @@ with (grammar) {
     });
     describe('Listeners', function() {
         it('should call callback on a match', function() {
-            let a = new Terminal('a');
             let matched = false;
-            a.listen((input, result) => {
-                matched = true;
-            });
+            let a = new Terminal('a', (res) => {matched = true});
             a.parse('a');
             assert.equal(matched, true);
         });
         it('should correctly attach ast', function() {
-            let a = new Terminal('a');
-            a.listen((result, input) => {
+            let a = new Terminal('a', (result) => {
                 return result.result;
             });
             let res = a.parse('a');
