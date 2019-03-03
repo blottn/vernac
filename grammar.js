@@ -1,15 +1,16 @@
 class Result {
-    constructor(matched, result, remaining, attributes) {
+    constructor(matched, result, remaining, ast) {
         this.matched = matched;
         this.result = result;
         this.remaining = remaining;
-        this.attributes = attributes;
+        this.ast = ast;
     }
 }
 
 class Grammar {
     constructor() {
         this.nullable = false;
+        this.listener = () => undefined;
     }
 
     match(input, strict = false) {
@@ -18,16 +19,10 @@ class Grammar {
 
     parse(input, strict = false) {
         let res = this.match(input, strict);
-        let attributes;
-        if (res.matched)
-            attributes = this.onMatch(res, input);
-        if (attributes)
-            res.attributes = attributes;
+        if (res.matched) {
+            res.ast = this.listener(res);
+        }
         return res;
-    }
-
-    onMatch(res, input) {
-        return (this.listener ? this.listener(res, input) : undefined);
     }
 
     or(alternative) {
@@ -121,17 +116,17 @@ class NTimes extends Grammar {
         let matches = 0;
         let res;
         let matched = '';
-        let attrs = [];
+        let asts = [];
         for (res = this.grammar.parse(input, true) ; res.matched; res = this.grammar.parse(res.remaining, true)) {
             matches++;
             matched += res.result;
-            attrs.concat(res.attributes);
+            asts = asts.concat(res.ast);
             res = this.grammar.parse(res.remaining, true);
         }
         if (matches >= this.count) {
-            return new Result(true, matched, res.remaining, attrs);
+            return new Result(true, matched, res.remaining, asts);
         }
-        return new Result(false, '', input);
+        return new Result(false, '', input, []);
     }
 }
 
@@ -168,6 +163,7 @@ class Sequence extends Grammar {
         if (res.matched) {
             let second_res = this.second.parse(res.remaining, strict);
             if (second_res.matched) {
+                second_res.ast = {first: res.ast, second: second_res.ast};
                 return second_res;
             }
             else {

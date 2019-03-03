@@ -252,14 +252,14 @@ with (grammar) {
             a.parse('a');
             assert.equal(matched, true);
         });
-        it('should correctly attach attributes', function() {
+        it('should correctly attach ast', function() {
             let a = new Terminal('a');
             a.listen((result, input) => {
                 return result.result;
             });
             let res = a.parse('a');
             assert.equal(res.matched, true);
-            assert.equal(res.attributes, 'a');
+            assert.equal(res.ast, 'a');
         });
     });
 }
