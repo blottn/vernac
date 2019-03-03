@@ -10,7 +10,7 @@ class Result {
 class Grammar {
     constructor() {
         this.nullable = false;
-        this.listener = () => undefined;
+        this.listener = (r) => r.ast;
     }
 
     match(input, strict = false) {
@@ -164,6 +164,7 @@ class Sequence extends Grammar {
             let second_res = this.second.parse(res.remaining, strict);
             if (second_res.matched) {
                 second_res.ast = {first: res.ast, second: second_res.ast};
+                second_res.result = res.result + second_res.result;
                 return second_res;
             }
             else {
