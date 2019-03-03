@@ -62,6 +62,7 @@ class Terminal extends Grammar {
         this.word = word;
         this.re = new RegExp('^' + word);
         this.nullable = word === '';
+        this.listener = (res) => res.result;
     }
     
     match(input, strict) {
@@ -121,8 +122,8 @@ class NTimes extends Grammar {
         for (res = this.grammar.parse(input, true) ; res.matched; res = this.grammar.parse(res.remaining, true)) {
             matches++;
             matched += res.result;
+            
             asts = asts.concat(res.ast);
-            res = this.grammar.parse(res.remaining, true);
         }
         if (matches >= this.count) {
             return new Result(true, matched, res.remaining, asts);
