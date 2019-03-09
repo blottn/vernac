@@ -27,11 +27,11 @@ class Grammar {
     }
 
     or(alternative, listener) {
-        return new OrderedChoice(this,alternative, listener);
+        return new OrderedChoice(this, check(alternative), listener);
     }
 
     then(next, listener) {
-        return new Sequence(this,next, listener);
+        return new Sequence(this, check(next), listener);
     }
 
     optionally(listener) {
@@ -39,11 +39,11 @@ class Grammar {
     }
 
     before(next, listener) {
-        return new Lookahead(this,next, listener);
+        return new Lookahead(this, check(next), listener);
     }
 
     notBefore(next, listener) {
-        return new Not(this, next, listener);
+        return new Not(this, check(next), listener);
     }
 
     times(n, listener) {
@@ -57,6 +57,13 @@ class Grammar {
 
     default_listener(r) {
         return r.ast;
+    }
+
+    check(item) {
+        if (item instanceof String)
+            return new Terminal(item);
+        else
+            return item;
     }
 }
 
