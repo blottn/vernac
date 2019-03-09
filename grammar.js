@@ -60,7 +60,7 @@ class Grammar {
     }
 
     check(item) {
-        if (item instanceof String)
+        if (typeof item === 'string')
             return new Terminal(item);
         else
             return item;

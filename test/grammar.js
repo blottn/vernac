@@ -323,4 +323,15 @@ with (grammar) {
             assert.equal(res.ast, 'a');
         });
     });
+    describe('Syntactic sugar', function() {
+        it('should correctly add strings as terminals', function() {
+            let done = false;
+            let a = new Terminal('a')
+                .then('b', (res) => {
+                    done = true;
+                });
+            a.parse('ab');
+            assert.equal(done,true);
+        });
+    });
 }
