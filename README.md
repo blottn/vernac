@@ -159,3 +159,5 @@ optional.parse('b'); //succeeds and returns '' with 'b' still to be parsed
 
 - Add tests to verify the result field.
 - Add stronger tests for listeners and ast building
+- Add semantic error return possibilities for the listeners 
+- Add syntactic sugar for creating it from a list of tuples
