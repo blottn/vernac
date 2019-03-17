@@ -139,7 +139,7 @@ class Terminal extends Grammar {
     }
 
     first() {
-        return new Set(word);
+        return new Set([this.word]);
     }
 
     default_listener(r) {
@@ -172,7 +172,7 @@ class Optional extends Grammar {
     }
 
     first() {
-        return new Set(subGrammar.first());
+        return new Set(this.subGrammar.first());
     }
 
     match(input, strict) {
@@ -212,7 +212,7 @@ class NTimes extends Grammar {
         if (matches >= this.count) {
             return new Result(true, matched, res.remaining, asts);
         }
-        return new Result(false, '', input, [], );
+        return new Result(false, '', input, []);
     }
 
     first() {
@@ -268,6 +268,7 @@ class Sequence extends Grammar {
                 return second_res;
             }
             else {
+                second_res.remaining = input;
                 return second_res;
             }
         }

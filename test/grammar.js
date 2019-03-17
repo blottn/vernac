@@ -15,6 +15,11 @@ with (grammar) {
                 assert.equal(new Empty().nullable, true);
             });
         });
+        describe('#first()' , function() {
+            it('should produce nothing', function() {
+                assert.deepEqual(new Empty().first(), new Set(''));
+            });
+        });
     });
     describe('Terminal', function() {
         describe('#parse()', function() {
@@ -38,6 +43,11 @@ with (grammar) {
             it('should be nullable iff it is empty', function() {
                 assert.equal(new Terminal('').nullable, true);
                 assert.equal(new Terminal('a').nullable, false);
+            });
+        });
+        describe('#first()' , function() {
+            it('should produce the input word', function() {
+                assert.deepEqual(new Terminal('abcd').first(), new Set(['abcd']));
             });
         });
     });
@@ -69,6 +79,13 @@ with (grammar) {
                 assert.equal(a.or(nullable).nullable, true);
                 assert.equal(nullable.or(nullable).nullable, true);
                 assert.equal(a.or(a).nullable, false);
+            });
+        });
+        describe('#first()' , function() {
+            it('should produce the first union the second', function() {
+                let grammar = new Terminal('ab')
+                    .or('efg');
+                assert.deepEqual(grammar.first(), new Set(['ab', 'efg']));
             });
         });
     });
@@ -131,6 +148,18 @@ with (grammar) {
                 assert.equal(nullable.then(nullable).nullable, true);
             });
         });
+        describe('#first()' , function() {
+            it('should produce just the first', function() {
+                let grammar = new Terminal('ab')
+                    .then('efg');
+                assert.deepEqual(grammar.first(), new Set(['ab']));
+            });
+            it('should use the second if the first is nullable', function() {
+                let grammar = new Terminal('ab').optionally()
+                    .then('efg');
+                assert.deepEqual(grammar.first(), new Set(['ab','efg']));
+            });
+        });
     });
     describe('Optional', function() {
         describe('#parse()', function() {
@@ -159,6 +188,13 @@ with (grammar) {
                 let nullable = new Empty();
                 assert.equal(a.optionally().nullable, true);
                 assert.equal(nullable.optionally().nullable, true);
+            });
+        });
+        describe('#first()', function() {
+            it('should return the underlying grammar\'s first', function() {
+                let sub = new Terminal('a');
+                let grammar = sub.optionally();
+                assert.deepEqual(grammar.first(), sub.first());
             });
         });
     });
@@ -210,6 +246,13 @@ with (grammar) {
                 assert.equal(nullable.before(nullable).nullable, true);
             });
         });
+        describe('#first()', function() {
+            it('should return the first grammar\'s first', function() {
+                let sub = new Terminal('a');
+                let grammar = sub.before('b');
+                assert.deepEqual(grammar.first(), sub.first());
+            });
+        });
     });
     describe('Not', function() {
         describe('#parse()', function() {
@@ -257,6 +300,13 @@ with (grammar) {
                 assert.equal(a.notBefore(nullable).nullable, false);
                 assert.equal(nullable.notBefore(a).nullable, true);
                 assert.equal(nullable.notBefore(nullable).nullable, true);
+            });
+        });
+        describe('#first()', function() {
+            it('should return the first grammar\'s first', function() {
+                let sub = new Terminal('a');
+                let grammar = sub.notBefore('b');
+                assert.deepEqual(grammar.first(), sub.first());
             });
         });
     });
@@ -310,6 +360,18 @@ with (grammar) {
                 assert.equal(one_a.parse('baaaas').remaining, 'baaaas');
                 assert.equal(zero_a.parse('baaaas').matched, true);
                 assert.equal(zero_a.parse('baaaas').remaining, 'baaaas');
+            });
+        });
+        describe('#first()', function() {
+            it('should return the underlying grammar\'s first', function() {
+                let sub = new Terminal('a');
+                let grammar = sub.times(5);
+                assert.deepEqual(grammar.first(), sub.first());
+            });
+            it('should attach null if times 0', function() {
+                let sub = new Terminal('a');
+                let grammar = sub.times(0);
+                assert.deepEqual(grammar.first(), sub.first().add(''));
             });
         });
     });
