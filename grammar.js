@@ -255,6 +255,7 @@ class Not extends Grammar {
 }
 
 module.exports = {
+    NonTerminal : NonTerminal,
     Terminal : Terminal,
     Empty : Empty,
 };
