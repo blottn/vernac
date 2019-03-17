@@ -103,7 +103,10 @@ with (grammar) {
                 let a = new Terminal('a');
                 let b = new Terminal('b');
                 let seq = a.then(b,(r) => {
-                    return { assertion : r.ast};
+                    return {
+                        ast: { assertion : r.ast},
+                        error : false
+                    };
                 });
                 let res = seq.parse('ab');
                 assert.deepEqual(res, {
@@ -115,7 +118,8 @@ with (grammar) {
                             left: 'a',
                             right: 'b'
                         }
-                    }
+                    },
+                    error: false
                 });
             });
             it('should be nullable if both are nullable', function() {
@@ -191,6 +195,7 @@ with (grammar) {
                 let res = cut.parse('ac');
                 assert.deepEqual(res, {
                     matched: true,
+                    error: false,
                     result: 'a',
                     remaining: 'c',
                     ast: 'a'
@@ -239,6 +244,7 @@ with (grammar) {
                 let res = cut.parse('ac');
                 assert.deepEqual(res, {
                     matched: true,
+                    error: false,
                     result: 'a',
                     remaining: 'c',
                     ast: 'a'
@@ -310,13 +316,19 @@ with (grammar) {
     describe('Listeners', function() {
         it('should call callback on a match', function() {
             let matched = false;
-            let a = new Terminal('a', (res) => {matched = true});
+            let a = new Terminal('a', (res) => {
+                matched = true;
+                return {};
+            });
             a.parse('a');
             assert.equal(matched, true);
         });
         it('should correctly attach ast', function() {
             let a = new Terminal('a', (result) => {
-                return result.result;
+                return {
+                    ast: result.result,
+                    error: false
+                };
             });
             let res = a.parse('a');
             assert.equal(res.matched, true);
