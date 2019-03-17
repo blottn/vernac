@@ -1,4 +1,3 @@
-
 class Result {
     constructor(matched, result, remaining, ast) {
         this.matched = matched;
@@ -51,8 +50,7 @@ class Grammar {
     }
 
     listen(listener) {
-        this.listener = listener;
-        return this;
+        return new NonTerminal(this, listener);
     }
 
     default_listener(r) {
@@ -68,6 +66,19 @@ class Grammar {
 }
 
 // Primitives
+class NonTerminal extends Grammar {
+    constructor(subGrammar, listener) {
+        super();
+        this.subGrammar = subGrammar;
+        this.nullable = subGrammar.nullable;
+    }
+
+    match(input, strict) {
+        return this.subGrammar.match(input,strict);
+    }
+
+}
+
 class Terminal extends Grammar {
     constructor(word, listener) {
         super();
