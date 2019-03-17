@@ -1,16 +1,32 @@
+// set helper
+function union(a, b) {
+    let out = new Set(a);
+    for (let e of b) {
+        out.add(e);
+    }
+    return out;
+}
+
+
 class Result {
-    constructor(matched, result, remaining, ast) {
+    constructor(matched, result, remaining, ast, error = false) {
         this.matched = matched;
         this.result = result;
         this.remaining = remaining;
         this.ast = ast;
+        this.error = error;
     }
 }
 
 class Grammar {
     constructor() {
         this.nullable = false;
-        this.listener = (r) => r.ast;
+        this.listener = (r) => {
+            return {
+                ast: r.ast,
+                error: false
+            };
+        };
     }
 
     match(input, strict = false) {
@@ -20,7 +36,15 @@ class Grammar {
     parse(input, strict = false) {
         let res = this.match(input, strict);
         if (res.matched) {
-            res.ast = this.listener(res);
+            let r = this.listener(res);
+            if (r != undefined) {
+                res.ast = r.ast;
+                res.error = r.error;
+            }
+            else {
+                res.ast = undefined;
+                res.error = undefined;
+            }
         }
         return res;
     }
@@ -54,7 +78,18 @@ class Grammar {
     }
 
     default_listener(r) {
-        return r.ast;
+        return {
+            ast: r.ast,
+            error: false
+        };
+    }
+
+    first() {
+        return undefined;
+    }
+
+    baseError() {
+        return this.first() + ' expected';
     }
 
     check(item) {
@@ -71,6 +106,10 @@ class NonTerminal extends Grammar {
         super();
         this.subGrammar = subGrammar;
         this.nullable = subGrammar.nullable;
+    }
+    
+    first() {
+        return subGrammar.first();
     }
 
     match(input, strict) {
@@ -95,12 +134,19 @@ class Terminal extends Grammar {
             return new Result(matched, res[0], input.substring(res.index + res[0].length));
         }
         else {
-            return new Result(false, '', input);
+            return new Result(false, '', input, undefined, this.word + ' expected');
         }
     }
 
+    first() {
+        return new Set(word);
+    }
+
     default_listener(r) {
-        return r.result;
+        return {
+            ast: r.result,
+            error: false
+        };
     }
 }
 
@@ -108,7 +154,11 @@ class Empty extends Terminal {
     constructor(listener) {
         super('');
         this.listener = listener || this.default_listener;
-        this.nullable = true;       
+        this.nullable = true;
+    }
+
+    first() {
+        return new Set('');
     }
 }
 
@@ -119,6 +169,10 @@ class Optional extends Grammar {
         this.listener = listener || this.default_listener;
         this.subGrammar = subGrammar;
         this.nullable = true;
+    }
+
+    first() {
+        return new Set(subGrammar.first());
     }
 
     match(input, strict) {
@@ -158,7 +212,15 @@ class NTimes extends Grammar {
         if (matches >= this.count) {
             return new Result(true, matched, res.remaining, asts);
         }
-        return new Result(false, '', input, []);
+        return new Result(false, '', input, [], );
+    }
+
+    first() {
+        let f = new Set(this.grammar.first());
+        if (this.count == 0) {
+            f.add('');
+        }
+        return f;
     }
 }
 
@@ -167,19 +229,23 @@ class OrderedChoice extends Grammar {
     constructor(a,b, listener) {
         super();
         this.listener = listener || this.default_listener;
-        this.first = a;
-        this.second = b;
+        this.left = a;
+        this.right = b;
         this.nullable = a.nullable || b.nullable;
     }
 
     match(input, strict) {
-        let res = this.first.parse(input, strict);
+        let res = this.left.parse(input, strict);
         if (res.matched) {
             return res;
         }
         else {
-            return this.second.parse(input, strict);
+            return this.right.parse(input, strict);
         }
+    }
+
+    first() {
+        return union(this.left.first(), this.right.first());
     }
 }
 
@@ -187,27 +253,34 @@ class Sequence extends Grammar {
     constructor(a,b, listener) {
         super();
         this.listener = listener || this.default_listener;
-        this.first = a;
-        this.second = b;
+        this.left = a;
+        this.right = b;
         this.nullable = a.nullable && b.nullable;
     }
 
     match(input, strict) {
-        let res = this.first.parse(input, strict);
+        let res = this.left.parse(input, strict);
         if (res.matched) {
-            let second_res = this.second.parse(res.remaining, strict);
+            let second_res = this.right.parse(res.remaining, strict);
             if (second_res.matched) {
                 second_res.ast = {left: res.ast, right: second_res.ast};
                 second_res.result = res.result + second_res.result;
                 return second_res;
             }
             else {
-                return new Result(false, '', input);
+                return second_res;
             }
         }
         else {
             return res;
         }
+    }
+
+    first() {
+        if (this.left.nullable) {
+            return union(this.left.first(), this.right.first());
+        }
+        return this.left.first();
     }
 }
 
@@ -231,6 +304,10 @@ class Lookahead extends Grammar{
         }
         return new Result(false, '', input);
     }
+
+    first() {
+        return this.current.first();
+    }
 }
 
 class Not extends Grammar {
@@ -251,6 +328,10 @@ class Not extends Grammar {
             }
         }
         return new Result(false, '', input);
+    }
+
+    first() {
+        return this.current.first();
     }
 }
 
