@@ -28,9 +28,25 @@ or more complicated regex:
 
 `let ident = new Terminal('[A-Za-z]+\\w*');`
 
+```Javascript
+let a = new Terminal('a');
+
+a.parse('a'); // succeeds
+a.parse('b'); // fails
+a.parse('ba'); // succeeds at index 1
+
+```
+
 ### Empty
 
 Matches explicitly nothing, a synonymous with `new Terminal('');`
+
+```Javascript
+let e = new Empty();
+
+e.parse(''); // succeeds
+e.parse('b'); // succeeds with b still to be parsed
+```
 
 ### Associated actions
 
