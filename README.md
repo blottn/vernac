@@ -101,7 +101,7 @@ Similar to lookahead but inverted.
 let a = new Terminal('a');
 let b = new Terminal('b');
 
-let negated = a.before(b);
+let negated = a.notBefore(b);
 
 negated.parse('a'); // succeeds
 negated.parse('b'); // fails
