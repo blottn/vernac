@@ -1,3 +1,4 @@
+// result constructor
 class Result {
     constructor(matched, result, remaining, ast) {
         this.matched = matched;
@@ -7,6 +8,7 @@ class Result {
     }
 }
 
+// grammar 
 class Grammar {
     constructor() {
         this.nullable = false;
@@ -28,7 +30,7 @@ class Grammar {
     or(alternative, listener) {
         return new OrderedChoice(this, this.check(alternative), listener);
     }
-
+:
     then(next, listener) {
         return new Sequence(this, this.check(next), listener);
     }
