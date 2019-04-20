@@ -1,3 +1,10 @@
+/*  Filename: vernac.js
+    Directory: ./
+    Author: Nicholas Blott
+    Email: blottn@tcd.ie
+    Description: DSL for creating parsers
+*/
+
 // result constructor
 class Result {
     constructor(matched, result, remaining, ast) {
@@ -15,6 +22,7 @@ class Grammar {
         this.listener = (r) => r.ast;
     }
 
+    // internal matcher, strict indicates if it should match only if at start
     match(input, strict = false) {
         return new Result(true, '', input);
     }
@@ -26,6 +34,8 @@ class Grammar {
         }
         return res;
     }
+
+    // wrappers to make construction of parsers easier to understand
 
     or(alternative, listener) {
         return new OrderedChoice(this, this.check(alternative), listener);
@@ -55,10 +65,13 @@ class Grammar {
         return new NonTerminal(this, listener);
     }
 
+    // default listener
     default_listener(r) {
         return r.ast;
     }
 
+    // syntactic sugar to allow use of strings instead 
+    // of having to create a terminal everytime
     check(item) {
         if (typeof item === 'string')
             return new Terminal(item);
@@ -81,6 +94,8 @@ class NonTerminal extends Grammar {
 
 }
 
+
+// matches just a primitive regular expression
 class Terminal extends Grammar {
     constructor(word, listener) {
         super();
@@ -146,7 +161,7 @@ class NTimes extends Grammar {
         this.nullable = count > 0;
     }
 
-    match(input) {
+    match(input) { // constructs array of results and counts how many there are
         let matches = 0;
         let res;
         let matched = '';
@@ -174,6 +189,7 @@ class OrderedChoice extends Grammar {
         this.nullable = a.nullable || b.nullable;
     }
 
+    // try to match the first, otherwise match the second
     match(input, strict) {
         let res = this.first.parse(input, strict);
         if (res.matched) {
@@ -194,6 +210,7 @@ class Sequence extends Grammar {
         this.nullable = a.nullable && b.nullable;
     }
 
+    // match only if it matches a then b
     match(input, strict) {
         let res = this.first.parse(input, strict);
         if (res.matched) {
