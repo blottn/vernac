@@ -18,6 +18,18 @@ class Result {
     }
 }
 
+class PartialResult {
+    constructor(skipped, result, remaining) {
+        this.skipped = skipped;
+        this.result = result;
+        this.remaining = remaining;
+    }
+}
+
+class Failure {
+    constructor() {}
+}
+
 class Grammar {
     constructor() {
         this.nullable = false;
