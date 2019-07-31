@@ -129,7 +129,7 @@ class Terminal extends Grammar {
             }
             else {
                 let skipped = input.substring(0,res.index);
-                let remainder = input.substring(res.index + res[0].length))
+                let remainder = input.substring(res.index + res[0].length);
                 return new PartialResult(skipped, res[0], remainder);
             }
         }
