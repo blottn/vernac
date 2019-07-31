@@ -9,12 +9,10 @@ function union(a, b) {
 
 
 class Result {
-    constructor(matched, result, remaining, ast, error = false) {
-        this.matched = matched;
+    constructor(result, remaining, ast) {
         this.result = result;
         this.remaining = remaining;
         this.ast = ast;
-        this.error = error;
     }
 }
 
