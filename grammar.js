@@ -9,7 +9,7 @@ function union(a, b) {
 
 
 class Result {
-    constructor(result, remaining, ast) {
+    constructor(result, remaining, ast = result) {
         this.result = result;
         this.remaining = remaining;
         this.ast = ast;
@@ -17,10 +17,11 @@ class Result {
 }
 
 class PartialResult {
-    constructor(skipped, result, remaining) {
+    constructor(skipped, result, remaining, ast = result) {
         this.skipped = skipped;
         this.result = result;
         this.remaining = remaining;
+        this.ast = ast;
     }
 }
 
@@ -39,24 +40,8 @@ class Grammar {
         };
     }
 
-    match(input, strict = false) {
-        return new Result(true, '', input);
-    }
-
-    parse(input, strict = false) {
-        let res = this.match(input, strict);
-        if (res.matched) {
-            let r = this.listener(res);
-            if (r != undefined) {
-                res.ast = r.ast;
-                res.error = r.error;
-            }
-            else {
-                res.ast = undefined;
-                res.error = undefined;
-            }
-        }
-        return res;
+    parse(input) {
+        return new Result('', input, null);
     }
 
     or(alternative, listener) {
@@ -122,10 +107,9 @@ class NonTerminal extends Grammar {
         return subGrammar.first();
     }
 
-    match(input, strict) {
-        return this.subGrammar.match(input,strict);
+    parse(input) {
+        return this.subGrammar.parse(input,strict);
     }
-
 }
 
 class Terminal extends Grammar {
@@ -137,14 +121,20 @@ class Terminal extends Grammar {
         this.listener = listener || this.default_listener;
     }
     
-    match(input, strict) {
+    parse(input) {
         let res = this.re.exec(input);
         if (res) {
-            let matched = res.index == 0 || !strict;
-            return new Result(matched, res[0], input.substring(res.index + res[0].length));
+            if (res.index == 0) {
+                return new Result(res[0], input.substring(res[0].length));
+            }
+            else {
+                let skipped = input.substring(0,res.index);
+                let remainder = input.substring(res.index + res[0].length))
+                return new PartialResult(skipped, res[0], remainder);
+            }
         }
         else {
-            return new Result(false, '', input, undefined, this.word + ' expected');
+            return new Failure();
         }
     }
 
@@ -165,6 +155,10 @@ class Empty extends Terminal {
         super('');
         this.listener = listener || this.default_listener;
         this.nullable = true;
+    }
+    
+    parse(input) {
+        return new Result('', input);
     }
 
     first() {
