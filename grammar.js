@@ -7,26 +7,35 @@ function union(a, b) {
     return out;
 }
 
-
-class Result {
-    constructor(result, remaining, ast = result) {
-        this.result = result;
+class BaseResult {
+    constructor(matched, remaining) {
+        this.matched = matched;
         this.remaining = remaining;
+    }
+}
+
+class Result extends BaseResult {
+    constructor(result, remaining, ast = result) {
+        super(true, remaining);
+        this.result = result;
         this.ast = ast;
     }
 }
 
-class PartialResult {
+class PartialResult extends BaseResult {
     constructor(skipped, result, remaining, ast = result) {
+        super(true, remaining);
         this.skipped = skipped;
         this.result = result;
-        this.remaining = remaining;
         this.ast = ast;
     }
 }
 
-class Failure {
-    constructor() {}
+class Failure extends BaseResult {
+    constructor(remaining) {
+        super(false, remaining);
+        this.remaining = remaining;
+    }
 }
 
 class Grammar {
@@ -134,7 +143,7 @@ class Terminal extends Grammar {
             }
         }
         else {
-            return new Failure();
+            return new Failure(input);
         }
     }
 
@@ -230,7 +239,7 @@ class NTimes extends Grammar {
 
 // Order
 class OrderedChoice extends Grammar {
-    constructor(a,b, listener) {
+    constructor(a, b, listener) {
         super();
         this.listener = listener || this.default_listener;
         this.left = a;
@@ -238,13 +247,13 @@ class OrderedChoice extends Grammar {
         this.nullable = a.nullable || b.nullable;
     }
 
-    match(input, strict) {
-        let res = this.left.parse(input, strict);
+    parse(input) {
+        let res = this.left.parse(input);
         if (res.matched) {
             return res;
         }
         else {
-            return this.right.parse(input, strict);
+            return this.right.parse(input);
         }
     }
 
@@ -262,10 +271,10 @@ class Sequence extends Grammar {
         this.nullable = a.nullable && b.nullable;
     }
 
-    match(input, strict) {
-        let res = this.left.parse(input, strict);
+    parse(input) {
+        let res = this.left.parse(input);
         if (res.matched) {
-            let second_res = this.right.parse(res.remaining, strict);
+            let second_res = this.right.parse(res.remaining);
             if (second_res.matched) {
                 second_res.ast = {left: res.ast, right: second_res.ast};
                 second_res.result = res.result + second_res.result;
@@ -277,7 +286,7 @@ class Sequence extends Grammar {
             }
         }
         else {
-            return res;
+            return new Failure(input);
         }
     }
 
